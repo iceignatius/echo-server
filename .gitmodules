@@ -1,0 +1,3 @@
+[submodule "submod/genutil"]
+	path = submod/genutil
+	url = https://github.com/iceignatius/genutil.git
