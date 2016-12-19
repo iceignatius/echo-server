@@ -1,3 +1,6 @@
 [submodule "submod/genutil"]
 	path = submod/genutil
 	url = https://github.com/iceignatius/genutil.git
+[submodule "submod/c11thrd"]
+	path = submod/c11thrd
+	url = https://github.com/iceignatius/c11thrd.git
