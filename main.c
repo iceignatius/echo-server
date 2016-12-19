@@ -68,7 +68,7 @@ int peer_process(socktcp_t *peer)
             if( recvsz < 0 || sentsz < 0 ) break;
 
             if( recvsz || sentsz )
-                timectr_reset_ctronly(&timer);
+                timectr_reset(&timer);
             else
                 systime_sleep_awhile();
         }
