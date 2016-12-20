@@ -39,6 +39,14 @@
 			<Add library="c11thrd" />
 			<Add directory="submod/c11thrd/lib" />
 		</Linker>
+		<Unit filename="epoll_encap.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="epoll_encap.h" />
+		<Unit filename="listener.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="listener.h" />
 		<Unit filename="main.c">
 			<Option compilerVar="CC" />
 		</Unit>
