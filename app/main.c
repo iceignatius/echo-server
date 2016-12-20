@@ -31,6 +31,9 @@ int main(int argc, char *argv[])
             static const unsigned event_timeout = 500;
             epoll_encap_process_events(&epoll, event_timeout);
         }
+
+        listener_stop(&listener);
+        tcp_peer_wait_all_finished();
     }
     JMPBK_END
 
