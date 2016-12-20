@@ -148,6 +148,7 @@ int event_dispatcher(struct epoll_event *data)
     }
     atomic_fetch_sub(&callbacks->calling_count, 1);
 
+    free(data);
     return 0;
 }
 //------------------------------------------------------------------------------
@@ -169,7 +170,14 @@ void epoll_encap_process_events(epoll_encap_t *self, unsigned timeout)
 
     for(int i=0; i<count; ++i)
     {
-        struct epoll_event *item = &list[i];
+        struct epoll_event *item = malloc(sizeof(struct epoll_event));
+        if( !item )
+        {
+            fputs("ERROR: Cannot allocate more memory!\n", stderr);
+            abort();
+        }
+
+        *item = list[i];
 
         thrd_t thrd;
         if( thrd_success != thrd_create(&thrd, (int(*)(void*)) event_dispatcher, item) )
