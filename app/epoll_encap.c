@@ -135,7 +135,7 @@ int event_dispatcher(struct epoll_event *data)
     uint32_t events = data->events;
     epoll_encap_callbacks_t *callbacks = data->data.ptr;
 
-    if( !atomic_fetch_and(&callbacks->calling_count, 1) )
+    if( !atomic_fetch_add(&callbacks->calling_count, 1) )
     {
         if(( callbacks->on_read )&&( events & ( EPOLLIN | EPOLLPRI ) ))
             callbacks->on_read(callbacks->userarg);
