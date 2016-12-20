@@ -2,6 +2,7 @@
 #include <gen/jmpbk.h>
 #include <gen/timectr.h>
 #include "listener.h"
+#include "tcp_peer.h"
 
 int main(int argc, char *argv[])
 {
@@ -9,7 +10,7 @@ int main(int argc, char *argv[])
     epoll_encap_init(&epoll);
 
     listener_t listener;
-    listener_init(&listener, &epoll);
+    listener_init(&listener, &epoll, (int(*)(void*)) tcp_peer_proc);
 
     JMPBK_BEGIN
     {
