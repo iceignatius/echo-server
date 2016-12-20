@@ -166,7 +166,6 @@ void epoll_encap_process_events(epoll_encap_t *self, unsigned timeout)
     struct epoll_event list[1024];
     static const int max_count = sizeof(list)/sizeof(list[0]);
     int count = epoll_wait(self->epfd, list, max_count, timeout);
-    if( count <= 0 ) return;
 
     for(int i=0; i<count; ++i)
     {
