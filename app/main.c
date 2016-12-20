@@ -35,6 +35,8 @@ int main(int argc, char *argv[])
     JMPBK_END
 
     listener_deinit(&listener);
+
+    epoll_encap_wait_all_events(&epoll);
     epoll_encap_deinit(&epoll);
 
     return 0;

@@ -36,6 +36,7 @@ typedef struct epoll_encap_callbacks_t
 typedef struct epoll_encap_t
 {
     int epfd;
+    atomic_int processing_count;
 } epoll_encap_t;
 
 void epoll_encap_init  (epoll_encap_t *self);
@@ -52,7 +53,8 @@ bool epoll_encap_modify(epoll_encap_t           *self,
                         epoll_encap_callbacks_t *callbacks);
 void epoll_encap_remove(epoll_encap_t *self, int fd);
 
-void epoll_encap_process_events(epoll_encap_t *self, unsigned timeout);
+void epoll_encap_process_events (epoll_encap_t *self, unsigned timeout);
+void epoll_encap_wait_all_events(epoll_encap_t *self);
 
 #ifdef __cplusplus
 }  // extern "C"

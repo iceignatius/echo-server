@@ -2,8 +2,65 @@
 #include <stdio.h>
 #include <threads.h>
 #include <unistd.h>
+#include <gen/systime.h>
 #include "epoll_encap.h"
 
+typedef struct event_dispatch_data_t
+{
+    struct epoll_event  data;
+    atomic_int         *processing_count;
+} event_dispatch_data_t;
+
+//------------------------------------------------------------------------------
+static
+event_dispatch_data_t* event_dispatch_data_create(struct epoll_event *data,
+                                                  atomic_int         *processing_count)
+{
+    event_dispatch_data_t *inst = malloc(sizeof(event_dispatch_data_t));
+    if( !inst )
+    {
+        fputs("ERROR: Cannot allocate more memory!\n", stderr);
+        abort();
+    }
+
+    inst->data = *data;
+    inst->processing_count = processing_count;
+
+    return inst;
+}
+//------------------------------------------------------------------------------
+static
+void event_dispatch_data_release(event_dispatch_data_t *self)
+{
+    free(self);
+}
+//------------------------------------------------------------------------------
+static
+int event_dispatch_proc(event_dispatch_data_t *self)
+{
+    atomic_fetch_add(self->processing_count, 1);
+    {
+        uint32_t events = self->data.events;
+        epoll_encap_callbacks_t *callbacks = self->data.data.ptr;
+
+        if( !atomic_fetch_add(&callbacks->calling_count, 1) )
+        {
+            if(( callbacks->on_read )&&( events & ( EPOLLIN | EPOLLPRI ) ))
+                callbacks->on_read(callbacks->userarg);
+
+            if(( callbacks->on_write )&&( events & EPOLLOUT ))
+                callbacks->on_write(callbacks->userarg);
+
+            if(( callbacks->on_error )&&( events & ( EPOLLERR | EPOLLHUP ) ))
+                callbacks->on_error(callbacks->userarg);
+        }
+        atomic_fetch_sub(&callbacks->calling_count, 1);
+    }
+    atomic_fetch_sub(self->processing_count, 1);
+
+    event_dispatch_data_release(self);
+    return 0;
+}
 //------------------------------------------------------------------------------
 void epoll_encap_init(epoll_encap_t *self)
 {
@@ -12,6 +69,7 @@ void epoll_encap_init(epoll_encap_t *self)
      * @brief Constructor.
      */
     self->epfd = -1;
+    atomic_init(&self->processing_count, 0);
 }
 //------------------------------------------------------------------------------
 void epoll_encap_deinit(epoll_encap_t *self)
@@ -129,29 +187,6 @@ void epoll_encap_remove(epoll_encap_t *self, int fd)
     epoll_ctl(self->epfd, EPOLL_CTL_DEL, fd, NULL);
 }
 //------------------------------------------------------------------------------
-static
-int event_dispatcher(struct epoll_event *data)
-{
-    uint32_t events = data->events;
-    epoll_encap_callbacks_t *callbacks = data->data.ptr;
-
-    if( !atomic_fetch_add(&callbacks->calling_count, 1) )
-    {
-        if(( callbacks->on_read )&&( events & ( EPOLLIN | EPOLLPRI ) ))
-            callbacks->on_read(callbacks->userarg);
-
-        if(( callbacks->on_write )&&( events & EPOLLOUT ))
-            callbacks->on_write(callbacks->userarg);
-
-        if(( callbacks->on_error )&&( events & ( EPOLLERR | EPOLLHUP ) ))
-            callbacks->on_error(callbacks->userarg);
-    }
-    atomic_fetch_sub(&callbacks->calling_count, 1);
-
-    free(data);
-    return 0;
-}
-//------------------------------------------------------------------------------
 void epoll_encap_process_events(epoll_encap_t *self, unsigned timeout)
 {
     /**
@@ -169,17 +204,11 @@ void epoll_encap_process_events(epoll_encap_t *self, unsigned timeout)
 
     for(int i=0; i<count; ++i)
     {
-        struct epoll_event *item = malloc(sizeof(struct epoll_event));
-        if( !item )
-        {
-            fputs("ERROR: Cannot allocate more memory!\n", stderr);
-            abort();
-        }
-
-        *item = list[i];
+        event_dispatch_data_t *data = event_dispatch_data_create(&list[i],
+                                                                 &self->processing_count);
 
         thrd_t thrd;
-        if( thrd_success != thrd_create(&thrd, (int(*)(void*)) event_dispatcher, item) )
+        if( thrd_success != thrd_create(&thrd, (int(*)(void*)) event_dispatch_proc, data) )
         {
             fputs("ERROR: Cannot create thread!\n", stderr);
             abort();
@@ -191,5 +220,15 @@ void epoll_encap_process_events(epoll_encap_t *self, unsigned timeout)
             abort();
         }
     }
+}
+//------------------------------------------------------------------------------
+void epoll_encap_wait_all_events(epoll_encap_t *self)
+{
+    /**
+     * @memberof epoll_encap_t
+     * @brief Block until all event process are finished.
+     */
+    while( atomic_load(&self->processing_count) )
+        systime_sleep_awhile();
 }
 //------------------------------------------------------------------------------
