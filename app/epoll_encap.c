@@ -187,7 +187,7 @@ void epoll_encap_remove(epoll_encap_t *self, int fd)
     epoll_ctl(self->epfd, EPOLL_CTL_DEL, fd, NULL);
 }
 //------------------------------------------------------------------------------
-void epoll_encap_process_events(epoll_encap_t *self, unsigned timeout)
+int epoll_encap_process_events(epoll_encap_t *self, unsigned timeout)
 {
     /**
      * @memberof epoll_encap_t
@@ -196,7 +196,7 @@ void epoll_encap_process_events(epoll_encap_t *self, unsigned timeout)
      * @param self    Object instance.
      * @param timeout The time to wait events in milliseconds.
      */
-    if( self->epfd < 0 ) return;
+    if( self->epfd < 0 ) return 0;
 
     struct epoll_event list[1024];
     static const int max_count = sizeof(list)/sizeof(list[0]);
@@ -220,6 +220,8 @@ void epoll_encap_process_events(epoll_encap_t *self, unsigned timeout)
             abort();
         }
     }
+
+    return count;
 }
 //------------------------------------------------------------------------------
 void epoll_encap_wait_all_events(epoll_encap_t *self)

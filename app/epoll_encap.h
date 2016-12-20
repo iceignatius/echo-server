@@ -53,7 +53,7 @@ bool epoll_encap_modify(epoll_encap_t           *self,
                         epoll_encap_callbacks_t *callbacks);
 void epoll_encap_remove(epoll_encap_t *self, int fd);
 
-void epoll_encap_process_events (epoll_encap_t *self, unsigned timeout);
+int  epoll_encap_process_events (epoll_encap_t *self, unsigned timeout);
 void epoll_encap_wait_all_events(epoll_encap_t *self);
 
 #ifdef __cplusplus

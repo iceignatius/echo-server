@@ -29,7 +29,8 @@ int main(int argc, char *argv[])
         while( !timectr_is_expired(&timer) )
         {
             static const unsigned event_timeout = 500;
-            epoll_encap_process_events(&epoll, event_timeout);
+            if( epoll_encap_process_events(&epoll, event_timeout) )
+                timectr_reset(&timer);
         }
 
         listener_stop(&listener);
