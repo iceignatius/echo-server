@@ -28,8 +28,6 @@ void addr_to_str(char *buf, size_t bufsize, sockaddr_t addr)
 static
 void on_debug_message(void *userarg, int level, const char *file, int line, const char *msg)
 {
-#warning Debug usage!
-fprintf(stderr, "DEBUG (%d): %s\n", level, msg);
     // Ignore debug message.
 }
 //------------------------------------------------------------------------------
