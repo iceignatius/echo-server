@@ -7,7 +7,7 @@
 		<Option compiler="gcc" />
 		<Build>
 			<Target title="Debug">
-				<Option output="../bin/echo-server" prefix_auto="1" extension_auto="1" />
+				<Option output="bin/echo-server" prefix_auto="1" extension_auto="1" />
 				<Option object_output="debug/" />
 				<Option type="1" />
 				<Option compiler="gcc" />
@@ -16,7 +16,7 @@
 				</Compiler>
 			</Target>
 			<Target title="Release">
-				<Option output="../bin/echo-server" prefix_auto="1" extension_auto="1" />
+				<Option output="bin/echo-server" prefix_auto="1" extension_auto="1" />
 				<Option object_output="release/" />
 				<Option type="1" />
 				<Option compiler="gcc" />
@@ -31,8 +31,8 @@
 		<Compiler>
 			<Add option="-Wall" />
 			<Add option="-pthread" />
-			<Add directory="../submod/genutil" />
-			<Add directory="../submod/c11thrd/include" />
+			<Add directory="submod/genutil" />
+			<Add directory="submod/c11thrd/include" />
 		</Compiler>
 		<Linker>
 			<Add option="-pthread" />
@@ -40,66 +40,66 @@
 			<Add library="mbedtls" />
 			<Add library="mbedx509" />
 			<Add library="mbedcrypto" />
-			<Add directory="../submod/c11thrd/lib" />
+			<Add directory="submod/c11thrd/lib" />
 		</Linker>
-		<Unit filename="../submod/genutil/gen/cirbuf.c">
+		<Unit filename="app/epoll_encap.c">
 			<Option compilerVar="CC" />
 		</Unit>
-		<Unit filename="../submod/genutil/gen/cirbuf.h" />
-		<Unit filename="../submod/genutil/gen/jmpbk.h" />
-		<Unit filename="../submod/genutil/gen/net/ipconst.h" />
-		<Unit filename="../submod/genutil/gen/net/iptype.c">
+		<Unit filename="app/epoll_encap.h" />
+		<Unit filename="app/listener.c">
 			<Option compilerVar="CC" />
 		</Unit>
-		<Unit filename="../submod/genutil/gen/net/iptype.h" />
-		<Unit filename="../submod/genutil/gen/net/sockbase.c">
+		<Unit filename="app/listener.h" />
+		<Unit filename="app/main.c">
 			<Option compilerVar="CC" />
 		</Unit>
-		<Unit filename="../submod/genutil/gen/net/sockbase.h" />
-		<Unit filename="../submod/genutil/gen/net/socktcp.c">
+		<Unit filename="app/tcp_peer.c">
 			<Option compilerVar="CC" />
 		</Unit>
-		<Unit filename="../submod/genutil/gen/net/socktcp.h" />
-		<Unit filename="../submod/genutil/gen/net/sockudp.c">
+		<Unit filename="app/tcp_peer.h" />
+		<Unit filename="app/tls_peer.c">
 			<Option compilerVar="CC" />
 		</Unit>
-		<Unit filename="../submod/genutil/gen/net/sockudp.h" />
-		<Unit filename="../submod/genutil/gen/net/urlpar.c">
+		<Unit filename="app/tls_peer.h" />
+		<Unit filename="submod/genutil/gen/cirbuf.c">
 			<Option compilerVar="CC" />
 		</Unit>
-		<Unit filename="../submod/genutil/gen/net/urlpar.h" />
-		<Unit filename="../submod/genutil/gen/net/winwsa.c">
+		<Unit filename="submod/genutil/gen/cirbuf.h" />
+		<Unit filename="submod/genutil/gen/jmpbk.h" />
+		<Unit filename="submod/genutil/gen/net/ipconst.h" />
+		<Unit filename="submod/genutil/gen/net/iptype.c">
 			<Option compilerVar="CC" />
 		</Unit>
-		<Unit filename="../submod/genutil/gen/net/winwsa.h" />
-		<Unit filename="../submod/genutil/gen/systime.c">
+		<Unit filename="submod/genutil/gen/net/iptype.h" />
+		<Unit filename="submod/genutil/gen/net/sockbase.c">
 			<Option compilerVar="CC" />
 		</Unit>
-		<Unit filename="../submod/genutil/gen/systime.h" />
-		<Unit filename="../submod/genutil/gen/timectr.h" />
-		<Unit filename="../submod/genutil/gen/timeinf.c">
+		<Unit filename="submod/genutil/gen/net/sockbase.h" />
+		<Unit filename="submod/genutil/gen/net/socktcp.c">
 			<Option compilerVar="CC" />
 		</Unit>
-		<Unit filename="../submod/genutil/gen/timeinf.h" />
-		<Unit filename="epoll_encap.c">
+		<Unit filename="submod/genutil/gen/net/socktcp.h" />
+		<Unit filename="submod/genutil/gen/net/sockudp.c">
 			<Option compilerVar="CC" />
 		</Unit>
-		<Unit filename="epoll_encap.h" />
-		<Unit filename="listener.c">
+		<Unit filename="submod/genutil/gen/net/sockudp.h" />
+		<Unit filename="submod/genutil/gen/net/urlpar.c">
 			<Option compilerVar="CC" />
 		</Unit>
-		<Unit filename="listener.h" />
-		<Unit filename="main.c">
+		<Unit filename="submod/genutil/gen/net/urlpar.h" />
+		<Unit filename="submod/genutil/gen/net/winwsa.c">
 			<Option compilerVar="CC" />
 		</Unit>
-		<Unit filename="tcp_peer.c">
+		<Unit filename="submod/genutil/gen/net/winwsa.h" />
+		<Unit filename="submod/genutil/gen/systime.c">
 			<Option compilerVar="CC" />
 		</Unit>
-		<Unit filename="tcp_peer.h" />
-		<Unit filename="tls_peer.c">
+		<Unit filename="submod/genutil/gen/systime.h" />
+		<Unit filename="submod/genutil/gen/timectr.h" />
+		<Unit filename="submod/genutil/gen/timeinf.c">
 			<Option compilerVar="CC" />
 		</Unit>
-		<Unit filename="tls_peer.h" />
+		<Unit filename="submod/genutil/gen/timeinf.h" />
 		<Extensions>
 			<code_completion />
 			<envvars />

@@ -139,13 +139,13 @@ int tls_peer_proc(socktcp_t *sock)
 
         // Load certificate and keys.
 
-        if( mbedtls_pk_parse_keyfile(&key, "../conf/privkey.pem", NULL) )
+        if( mbedtls_pk_parse_keyfile(&key, "conf/privkey.pem", NULL) )
         {
             fputs("ERROR: Load key file failed!\n", stderr);
             JMPBK_THROW(0);
         }
 
-        if( mbedtls_x509_crt_parse_file(&cert, "../conf/cert.pem") )
+        if( mbedtls_x509_crt_parse_file(&cert, "conf/cert.pem") )
         {
             fputs("ERROR: Load certification file failed!\n", stderr);
             JMPBK_THROW(0);

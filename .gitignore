@@ -1,5 +1,5 @@
 /bin/
-/app/debug/
-/app/release/
+/debug/
+/release/
 *.depend
 *.layout
