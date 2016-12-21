@@ -19,20 +19,14 @@ int main(int argc, char *argv[])
     JMPBK_BEGIN
     {
         static const unsigned tcp_listen_port = 4220;
-        sockaddr_t tcp_listen_addr;
-        sockaddr_init_value(&tcp_listen_addr, ipv4_const_any, tcp_listen_port);
-
-        if( !listener_start(&tcp_listener, &tcp_listen_addr) )
+        if( !listener_start(&tcp_listener, tcp_listen_port) )
         {
             fprintf(stderr, "ERROR: TCP listener start failed!\n");
             JMPBK_THROW(0);
         }
 
         static const unsigned tls_listen_port = 4221;
-        sockaddr_t tls_listen_addr;
-        sockaddr_init_value(&tls_listen_addr, ipv4_const_any, tls_listen_port);
-
-        if( !listener_start(&tls_listener, &tls_listen_addr) )
+        if( !listener_start(&tls_listener, tls_listen_port) )
         {
             fprintf(stderr, "ERROR: TLS listener start failed!\n");
             JMPBK_THROW(0);

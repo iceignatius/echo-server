@@ -22,7 +22,7 @@ typedef struct listener_t
 void listener_init  (listener_t *self, epoll_encap_t *epoll, thrd_start_t peer_proc);
 void listener_deinit(listener_t *self);
 
-bool listener_start(listener_t *self, const sockaddr_t *addr);
+bool listener_start(listener_t *self, unsigned port);
 void listener_stop (listener_t *self);
 
 #ifdef __cplusplus

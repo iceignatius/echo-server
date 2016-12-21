@@ -48,14 +48,17 @@ void listener_deinit(listener_t *self)
     socktcp_deinit(&self->sock);
 }
 //------------------------------------------------------------------------------
-bool listener_start(listener_t *self, const sockaddr_t *addr)
+bool listener_start(listener_t *self, unsigned port)
 {
     listener_stop(self);
 
     bool res = false;
     do
     {
-        if( !socktcp_listen(&self->sock, addr, true) )
+        sockaddr_t addr;
+        sockaddr_init_value(&addr, ipv4_const_any, port);
+
+        if( !socktcp_listen(&self->sock, &addr, true) )
             break;
 
         if( !epoll_encap_add(self->epoll, socktcp_get_fd(&self->sock), EPOLLIN, &self->super) )
