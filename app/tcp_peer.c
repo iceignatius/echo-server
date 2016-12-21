@@ -49,7 +49,7 @@ int tcp_peer_proc(socktcp_t *sock)
 
     char addrstr[32] = {0};
     addr_to_str(addrstr, sizeof(addrstr)-1, socktcp_get_remote_addr(sock));
-    printf("Connected: %s\n", addrstr);
+    printf("TCP connected: %s\n", addrstr);
 
     cirbuf_t cache;
     cirbuf_init(&cache);
@@ -81,7 +81,7 @@ int tcp_peer_proc(socktcp_t *sock)
 
     cirbuf_deinit(&cache);
     socktcp_release(sock);
-    printf("Disconnected: %s\n", addrstr);
+    printf("TCP disconnected: %s\n", addrstr);
 
     atomic_fetch_sub(&refcnt, 1);
     return 0;

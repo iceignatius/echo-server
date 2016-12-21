@@ -37,6 +37,9 @@
 		<Linker>
 			<Add option="-pthread" />
 			<Add library="c11thrd" />
+			<Add library="mbedtls" />
+			<Add library="mbedx509" />
+			<Add library="mbedcrypto" />
 			<Add directory="../submod/c11thrd/lib" />
 		</Linker>
 		<Unit filename="../submod/genutil/gen/cirbuf.c">
@@ -93,6 +96,10 @@
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="tcp_peer.h" />
+		<Unit filename="tls_peer.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="tls_peer.h" />
 		<Extensions>
 			<code_completion />
 			<envvars />
