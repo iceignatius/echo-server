@@ -16,7 +16,7 @@ void addr_to_str(char *buf, size_t bufsize, sockaddr_t addr)
 
     unsigned port = sockaddr_get_port(&addr);
 
-    snprintf(buf, bufsize, "%s:%u\n", ipstr, port);
+    snprintf(buf, bufsize, "%s:%u", ipstr, port);
 }
 //------------------------------------------------------------------------------
 static
