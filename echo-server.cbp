@@ -61,6 +61,10 @@
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="app/tls_peer.h" />
+		<Unit filename="app/tls_resource.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="app/tls_resource.h" />
 		<Unit filename="submod/genutil/gen/cirbuf.c">
 			<Option compilerVar="CC" />
 		</Unit>

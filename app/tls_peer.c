@@ -2,13 +2,11 @@
 #include <stdio.h>
 #include <string.h>
 #include <mbedtls/error.h>
-#include <mbedtls/entropy.h>
-#include <mbedtls/ctr_drbg.h>
-#include <mbedtls/ssl_cache.h>
 #include <mbedtls/ssl.h>
 #include <gen/jmpbk.h>
 #include <gen/cirbuf.h>
 #include <gen/timectr.h>
+#include "tls_resource.h"
 #include "tls_peer.h"
 
 static atomic_int refcnt = ATOMIC_VAR_INIT(0);
@@ -26,9 +24,37 @@ void addr_to_str(char *buf, size_t bufsize, sockaddr_t addr)
 }
 //------------------------------------------------------------------------------
 static
-void on_debug_message(void *userarg, int level, const char *file, int line, const char *msg)
+tls_resource_t* get_unique_resource(void)
 {
-    // Ignore debug message.
+    static tls_resource_t res;
+
+    pthread_mutex_t lock = PTHREAD_MUTEX_INITIALIZER;
+    if( pthread_mutex_lock(&lock) )
+    {
+        fputs("ERROR: Mutex failure!\n", stderr);
+        abort();
+    }
+
+    static bool inited = false;
+    if( !inited )
+    {
+        inited = true;
+
+        tls_resource_init(&res);
+        if( !tls_resource_setup(&res, "conf/privkey.pem", "conf/cert.pem") )
+        {
+            fputs("ERROR: Set up TLS resource failed!\n", stderr);
+            abort();
+        }
+    }
+
+    if( pthread_mutex_unlock(&lock) )
+    {
+        fputs("ERROR: Mutex failure!\n", stderr);
+        abort();
+    }
+
+    return &res;
 }
 //------------------------------------------------------------------------------
 static
@@ -92,24 +118,6 @@ int tls_peer_proc(socktcp_t *sock)
     cirbuf_t datacache;
     cirbuf_init(&datacache);
 
-    mbedtls_entropy_context entropy;
-    mbedtls_entropy_init(&entropy);
-
-    mbedtls_ctr_drbg_context rndg;
-    mbedtls_ctr_drbg_init(&rndg);
-
-    mbedtls_ssl_cache_context tlscache;
-    mbedtls_ssl_cache_init(&tlscache);
-
-    mbedtls_pk_context key;
-    mbedtls_pk_init(&key);
-
-    mbedtls_x509_crt cert;
-    mbedtls_x509_crt_init(&cert);
-
-    mbedtls_ssl_config conf;
-    mbedtls_ssl_config_init(&conf);
-
     mbedtls_ssl_context tls;
     mbedtls_ssl_init(&tls);
 
@@ -124,60 +132,13 @@ int tls_peer_proc(socktcp_t *sock)
             JMPBK_THROW(0);
         }
 
-        // Initialise random number generator.
+        // Set up and get TLS resource.
 
-        const char pdata[] = "tls-server";
-        if( mbedtls_ctr_drbg_seed(&rndg,
-                                  mbedtls_entropy_func,
-                                  &entropy,
-                                  (const unsigned char*) pdata,
-                                  strlen(pdata)) )
-        {
-            fputs("ERROR: Initialise random number generator failed!\n", stderr);
-            JMPBK_THROW(0);
-        }
-
-        // Load certificate and keys.
-
-        if( mbedtls_pk_parse_keyfile(&key, "conf/privkey.pem", NULL) )
-        {
-            fputs("ERROR: Load key file failed!\n", stderr);
-            JMPBK_THROW(0);
-        }
-
-        if( mbedtls_x509_crt_parse_file(&cert, "conf/cert.pem") )
-        {
-            fputs("ERROR: Load certification file failed!\n", stderr);
-            JMPBK_THROW(0);
-        }
-
-        // Set configuration.
-
-        if( mbedtls_ssl_config_defaults(&conf,
-                                        MBEDTLS_SSL_IS_SERVER,
-                                        MBEDTLS_SSL_TRANSPORT_STREAM,
-                                        MBEDTLS_SSL_PRESET_DEFAULT) )
-        {
-            fputs("ERROR: Initialise TLS configuration failed!\n", stderr);
-            JMPBK_THROW(0);
-        }
-
-        if( mbedtls_ssl_conf_own_cert(&conf, &cert, &key) )
-        {
-            fputs("ERROR: Set up keys failed!\n", stderr);
-            JMPBK_THROW(0);
-        }
-
-        mbedtls_ssl_conf_rng(&conf, mbedtls_ctr_drbg_random, &rndg);
-        mbedtls_ssl_conf_dbg(&conf, on_debug_message, stderr);
-        mbedtls_ssl_conf_session_cache(&conf,
-                                       &tlscache,
-                                       mbedtls_ssl_cache_get,
-                                       mbedtls_ssl_cache_set );
+        tls_resource_t *resource = get_unique_resource();
 
         // Set up session.
 
-        if( mbedtls_ssl_setup(&tls, &conf) )
+        if( mbedtls_ssl_setup(&tls, &resource->conf) )
         {
             fputs("ERROR: Set up TLS session failed!\n", stderr);
             JMPBK_THROW(0);
@@ -240,12 +201,6 @@ int tls_peer_proc(socktcp_t *sock)
     JMPBK_END
 
     mbedtls_ssl_free(&tls);
-    mbedtls_ssl_config_free(&conf);
-    mbedtls_x509_crt_free(&cert);
-    mbedtls_pk_free(&key);
-    mbedtls_ssl_cache_free(&tlscache);
-    mbedtls_ctr_drbg_free(&rndg);
-    mbedtls_entropy_free(&entropy);
     cirbuf_deinit(&datacache);
 
     socktcp_release(sock);
