@@ -4,3 +4,6 @@
 [submodule "submod/c11thrd"]
 	path = submod/c11thrd
 	url = https://github.com/iceignatius/c11thrd.git
+[submodule "submod/tcptest"]
+	path = submod/tcptest
+	url = https://github.com/iceignatius/tcptest.git
