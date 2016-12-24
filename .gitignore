@@ -2,5 +2,6 @@
 /debug/
 /release/
 /app/temp/
+/test/resp*.txt
 *.depend
 *.layout
