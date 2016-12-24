@@ -107,6 +107,76 @@ int send_from_cache(mbedtls_ssl_context *tls, cirbuf_t *cache)
     return ( sentsz == cirbuf_commit_read(cache, sentsz) )?( sentsz ):( -1 );
 }
 //------------------------------------------------------------------------------
+static
+bool setup_session(mbedtls_ssl_context *tls, socktcp_t *sock, tls_resource_t *resource)
+{
+    if( mbedtls_ssl_setup(tls, &resource->conf) ) return false;
+
+    mbedtls_ssl_set_bio(tls,
+                        sock,
+                        (int(*)(void*,const unsigned char*,size_t)) on_send,
+                        (int(*)(void*,unsigned char*,size_t)) on_recv,
+                        NULL);
+
+    return true;
+}
+//------------------------------------------------------------------------------
+static
+bool handshake(mbedtls_ssl_context *tls)
+{
+    int handshake_rescode;
+    do
+    {
+        handshake_rescode = mbedtls_ssl_handshake(tls);
+    } while( handshake_rescode == MBEDTLS_ERR_SSL_WANT_READ ||
+             handshake_rescode == MBEDTLS_ERR_SSL_WANT_WRITE );
+
+    if( handshake_rescode )
+    {
+        char msg[512];
+        mbedtls_strerror(handshake_rescode, msg, sizeof(msg));
+        fprintf(stderr, "ERROR: TLS handshake error: %s\n", msg);
+    }
+
+    return !handshake_rescode;
+}
+//------------------------------------------------------------------------------
+static
+void print_tls_info(mbedtls_ssl_context *tls)
+{
+    printf("Connection protocol:\n");
+    printf("  Version : %s\n", mbedtls_ssl_get_version(tls));
+    printf("  Cipher  : %s\n", mbedtls_ssl_get_ciphersuite(tls));
+}
+//------------------------------------------------------------------------------
+static
+void data_exchange_proc(mbedtls_ssl_context *tls, cirbuf_t *cache, unsigned idle_timeout)
+{
+    timectr_t timer = timectr_init_inline(idle_timeout);
+    while( !timectr_is_expired(&timer) )
+    {
+        int recvsz = recv_to_cache(tls, cache);
+        int sentsz = send_from_cache(tls, cache);
+        if( recvsz < 0 || sentsz < 0 ) break;
+
+        if( recvsz || sentsz )
+            timectr_reset(&timer);
+        else
+            systime_sleep_awhile();
+    }
+}
+//------------------------------------------------------------------------------
+static
+void notify_end_session(mbedtls_ssl_context *tls)
+{
+    int close_rescode;
+    do
+    {
+        close_rescode = mbedtls_ssl_close_notify(tls);
+    } while( close_rescode == MBEDTLS_ERR_SSL_WANT_READ ||
+             close_rescode == MBEDTLS_ERR_SSL_WANT_WRITE );
+}
+//------------------------------------------------------------------------------
 int tls_peer_proc(socktcp_t *sock)
 {
     atomic_fetch_add(&refcnt, 1);
@@ -115,93 +185,44 @@ int tls_peer_proc(socktcp_t *sock)
     addr_to_str(addrstr, sizeof(addrstr)-1, socktcp_get_remote_addr(sock));
     printf("TLS connected: %s\n", addrstr);
 
-    cirbuf_t datacache;
-    cirbuf_init(&datacache);
+    cirbuf_t cache;
+    cirbuf_init(&cache);
 
     mbedtls_ssl_context tls;
     mbedtls_ssl_init(&tls);
 
     JMPBK_BEGIN
     {
-        // Allocate data cache.
-
         static const size_t bufsize = 1024;
-        if( !cirbuf_alloc(&datacache, bufsize) )
+        if( !cirbuf_alloc(&cache, bufsize) )
         {
             fprintf(stderr, "ERROR: Allocate data buffer failed!\n");
             JMPBK_THROW(0);
         }
 
-        // Set up and get TLS resource.
-
-        tls_resource_t *resource = get_unique_resource();
-
-        // Set up session.
-
-        if( mbedtls_ssl_setup(&tls, &resource->conf) )
+        if( !setup_session(&tls, sock, get_unique_resource()) )
         {
             fputs("ERROR: Set up TLS session failed!\n", stderr);
             JMPBK_THROW(0);
         }
 
-        mbedtls_ssl_set_bio(&tls,
-                            sock,
-                            (int(*)(void*,const unsigned char*,size_t)) on_send,
-                            (int(*)(void*,unsigned char*,size_t)) on_recv,
-                            NULL);
-
-        // Handshake.
-
-        int handshake_rescode;
-        do
+        if( !handshake(&tls) )
         {
-            handshake_rescode = mbedtls_ssl_handshake(&tls);
-        } while( handshake_rescode == MBEDTLS_ERR_SSL_WANT_READ ||
-                 handshake_rescode == MBEDTLS_ERR_SSL_WANT_WRITE );
-
-        if( handshake_rescode )
-        {
-            char msg[512];
-            mbedtls_strerror(handshake_rescode, msg, sizeof(msg));
-            fprintf(stderr, "ERROR: TLS handshake error: %s\n", msg);
+            fputs("ERROR: TLS handshake failed!\n", stderr);
             JMPBK_THROW(0);
         }
 
-        // Information display.
-
-        printf("Connection protocol:\n");
-        printf("  Version : %s\n", mbedtls_ssl_get_version(&tls));
-        printf("  Cipher  : %s\n", mbedtls_ssl_get_ciphersuite(&tls));
-
-        // Send and receive.
+        print_tls_info(&tls);
 
         static const unsigned idle_timeout = 3*1000;
-        timectr_t timer = timectr_init_inline(idle_timeout);
-        while( !timectr_is_expired(&timer) )
-        {
-            int recvsz = recv_to_cache(&tls, &datacache);
-            int sentsz = send_from_cache(&tls, &datacache);
-            if( recvsz < 0 || sentsz < 0 ) break;
+        data_exchange_proc(&tls, &cache, idle_timeout);
 
-            if( recvsz || sentsz )
-                timectr_reset(&timer);
-            else
-                systime_sleep_awhile();
-        }
-
-        // End session.
-
-        int close_rescode;
-        do
-        {
-            close_rescode = mbedtls_ssl_close_notify(&tls);
-        } while( close_rescode == MBEDTLS_ERR_SSL_WANT_READ ||
-                 close_rescode == MBEDTLS_ERR_SSL_WANT_WRITE );
+        notify_end_session(&tls);
     }
     JMPBK_END
 
     mbedtls_ssl_free(&tls);
-    cirbuf_deinit(&datacache);
+    cirbuf_deinit(&cache);
 
     socktcp_release(sock);
     printf("TLS disconnected: %s\n", addrstr);
