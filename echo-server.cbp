@@ -40,6 +40,7 @@
 			<Add library="mbedtls" />
 			<Add library="mbedx509" />
 			<Add library="mbedcrypto" />
+			<Add library="rt" />
 			<Add directory="submod/c11thrd/lib" />
 		</Linker>
 		<Unit filename="app/epoll_encap.c">
