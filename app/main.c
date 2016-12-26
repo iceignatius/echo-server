@@ -49,8 +49,7 @@ int main(int argc, char *argv[])
         while( !timectr_is_expired(&timer) && !go_terminate )
         {
             static const unsigned event_timeout = 500;
-            if( epoll_encap_process_events(&epoll, event_timeout) )
-                timectr_reset(&timer);
+            epoll_encap_process_events(&epoll, event_timeout);
         }
 
         listener_stop(&tls_listener);
