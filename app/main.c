@@ -1,12 +1,24 @@
 #include <stdio.h>
+#include <signal.h>
 #include <gen/jmpbk.h>
 #include <gen/timectr.h>
 #include "listener.h"
 #include "tcp_peer.h"
 #include "tls_peer.h"
 
+static bool go_terminate = false;
+
+static
+void signal_handler(int signum)
+{
+    if( signum == SIGQUIT || signum == SIGTERM )
+        go_terminate = true;
+}
+
 int main(int argc, char *argv[])
 {
+    signal(SIGQUIT, signal_handler);
+
     epoll_encap_t epoll;
     epoll_encap_init(&epoll);
 
@@ -34,7 +46,7 @@ int main(int argc, char *argv[])
 
         static const unsigned ap_timeout  = 10*1000;
         timectr_t timer = timectr_init_inline(ap_timeout);
-        while( !timectr_is_expired(&timer) )
+        while( !timectr_is_expired(&timer) && !go_terminate )
         {
             static const unsigned event_timeout = 500;
             if( epoll_encap_process_events(&epoll, event_timeout) )
