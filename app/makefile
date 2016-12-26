@@ -44,6 +44,7 @@ SRCS    += listener.c
 SRCS    += tcp_peer.c
 SRCS    += tls_resource.c
 SRCS    += tls_peer.c
+SRCS    += cmdopt.c
 SRCS    += main.c
 LIBS    :=
 LIBS    += -lc11thrd

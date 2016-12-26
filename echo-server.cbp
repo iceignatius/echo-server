@@ -43,6 +43,10 @@
 			<Add library="rt" />
 			<Add directory="submod/c11thrd/lib" />
 		</Linker>
+		<Unit filename="app/cmdopt.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="app/cmdopt.h" />
 		<Unit filename="app/epoll_encap.c">
 			<Option compilerVar="CC" />
 		</Unit>

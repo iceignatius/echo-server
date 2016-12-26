@@ -5,20 +5,42 @@
 #include "listener.h"
 #include "tcp_peer.h"
 #include "tls_peer.h"
+#include "cmdopt.h"
 
 static bool go_terminate = false;
 
+//------------------------------------------------------------------------------
 static
 void signal_handler(int signum)
 {
     if( signum == SIGQUIT || signum == SIGTERM )
         go_terminate = true;
 }
-
-int main(int argc, char *argv[])
+//------------------------------------------------------------------------------
+int print_help(void)
 {
-    signal(SIGQUIT, signal_handler);
+    printf("Echo server\n");
+    printf("\n");
+    printf("This is a server designed for connection test purpose\n");
+    printf("that will respond all of data which the client sent out.\n");
+    printf("\n");
+    printf("Usage:\n");
+    printf("  echo-server [options]\n");
+    printf("\n");
+    printf("Options:\n");
+    printf("  -h, --help              Print help message.\n");
+    printf("      --auto-exit=time    Let server terminate automatically with\n");
+    printf("                          a specific time in seconds.\n");
+    printf("                          This option may be useful for test usage.\n");
+    printf("      --config-file=file  Specify a configuration file to be used,\n");
+    printf("                          or the default file /etc/echo-server/conf\n");
+    printf("                          will be used.\n");
 
+    return 0;
+}
+//------------------------------------------------------------------------------
+int server_process(cmdopt_t *cmdopt)
+{
     epoll_encap_t epoll;
     epoll_encap_init(&epoll);
 
@@ -28,6 +50,7 @@ int main(int argc, char *argv[])
     listener_t tls_listener;
     listener_init(&tls_listener, &epoll, (int(*)(void*)) tls_peer_proc);
 
+    int res;
     JMPBK_BEGIN
     {
         static const unsigned tcp_listen_port = 4220;
@@ -50,6 +73,7 @@ int main(int argc, char *argv[])
         {
             static const unsigned event_timeout = 500;
             epoll_encap_process_events(&epoll, event_timeout);
+            timectr_reset(&timer);
         }
 
         listener_stop(&tls_listener);
@@ -57,6 +81,10 @@ int main(int argc, char *argv[])
 
         listener_stop(&tcp_listener);
         tcp_peer_wait_all_finished();
+    }
+    JMPBK_CATCH_ALL
+    {
+        res = JMPBK_ERRCODE;
     }
     JMPBK_END
 
@@ -66,5 +94,20 @@ int main(int argc, char *argv[])
     epoll_encap_wait_all_events(&epoll);
     epoll_encap_deinit(&epoll);
 
-    return 0;
+    return res;
 }
+//------------------------------------------------------------------------------
+int main(int argc, char *argv[])
+{
+    signal(SIGQUIT, signal_handler);
+
+    cmdopt_t cmdopt;
+    cmdopt_load_defaults(&cmdopt);
+    cmdopt_load_args(&cmdopt, argc, argv);
+
+    if( cmdopt.need_help )
+        return print_help();
+    else
+        return server_process(&cmdopt);
+}
+//------------------------------------------------------------------------------
