@@ -7,3 +7,6 @@
 [submodule "submod/tcptest"]
 	path = submod/tcptest
 	url = https://github.com/iceignatius/tcptest.git
+[submodule "submod/inih"]
+	path = submod/inih
+	url = https://github.com/benhoyt/inih.git
