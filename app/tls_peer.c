@@ -224,9 +224,7 @@ void tls_peer_proc(void *dummy, socktcp_t *sock)
     mbedtls_ssl_free(&tls);
     cirbuf_deinit(&cache);
 
-    socktcp_release(sock);
     printf("TLS disconnected: %s\n", addrstr);
-
     atomic_fetch_sub(&refcnt, 1);
 }
 //------------------------------------------------------------------------------

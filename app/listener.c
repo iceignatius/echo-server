@@ -37,6 +37,7 @@ int peer_thread_handler(peer_data_t *peer)
 {
     peer->listener->peer_proc(peer->listener->peer_arg, peer->sock);
 
+    socktcp_release(peer->sock);
     peer_data_release(peer);
     return 0;
 }

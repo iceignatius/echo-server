@@ -80,9 +80,8 @@ void tcp_peer_proc(void *dummy, socktcp_t *sock)
     JMPBK_END
 
     cirbuf_deinit(&cache);
-    socktcp_release(sock);
-    printf("TCP disconnected: %s\n", addrstr);
 
+    printf("TCP disconnected: %s\n", addrstr);
     atomic_fetch_sub(&refcnt, 1);
 }
 //------------------------------------------------------------------------------
