@@ -43,7 +43,7 @@ int send_from_cache(socktcp_t *sock, cirbuf_t *cache)
     return ( sentsz == cirbuf_commit_read(cache, sentsz) )?( sentsz ):( -1 );
 }
 //------------------------------------------------------------------------------
-int tcp_peer_proc(socktcp_t *sock)
+void tcp_peer_proc(void *dummy, socktcp_t *sock)
 {
     atomic_fetch_add(&refcnt, 1);
 
@@ -84,7 +84,6 @@ int tcp_peer_proc(socktcp_t *sock)
     printf("TCP disconnected: %s\n", addrstr);
 
     atomic_fetch_sub(&refcnt, 1);
-    return 0;
 }
 //------------------------------------------------------------------------------
 void tcp_peer_wait_all_finished(void)

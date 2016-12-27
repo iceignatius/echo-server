@@ -49,10 +49,10 @@ int server_process(cmdopt_t *cmdopt)
     epoll_encap_init(&epoll);
 
     listener_t tcp_listener;
-    listener_init(&tcp_listener, &epoll, (int(*)(void*)) tcp_peer_proc);
+    listener_init(&tcp_listener, &epoll, tcp_peer_proc, NULL);
 
     listener_t tls_listener;
-    listener_init(&tls_listener, &epoll, (int(*)(void*)) tls_peer_proc);
+    listener_init(&tls_listener, &epoll, tls_peer_proc, NULL);
 
     int res;
     JMPBK_BEGIN

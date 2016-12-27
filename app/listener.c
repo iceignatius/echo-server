@@ -1,16 +1,56 @@
 #include <stdlib.h>
 #include <stdio.h>
+#include <threads.h>
 #include "listener.h"
 
+typedef struct peer_data_t
+{
+    listener_t *listener;
+    socktcp_t  *sock;
+} peer_data_t;
+
+//------------------------------------------------------------------------------
+static
+peer_data_t* peer_data_create(listener_t *listener, socktcp_t *sock)
+{
+    peer_data_t *inst = malloc(sizeof(peer_data_t));
+    if( !inst )
+    {
+        fputs("ERROR: Cannot allocate more memory!\n", stderr);
+        abort();
+    }
+
+    inst->listener = listener;
+    inst->sock     = sock;
+
+    return inst;
+}
+//------------------------------------------------------------------------------
+static
+void peer_data_release(peer_data_t *self)
+{
+    free(self);
+}
+//------------------------------------------------------------------------------
+static
+int peer_thread_handler(peer_data_t *peer)
+{
+    peer->listener->peer_proc(peer->listener->peer_arg, peer->sock);
+
+    peer_data_release(peer);
+    return 0;
+}
 //------------------------------------------------------------------------------
 static
 void on_read(listener_t *self)
 {
-    socktcp_t *peer = socktcp_get_new_connect(&self->sock);
-    if( !peer ) return;
+    socktcp_t *sock = socktcp_get_new_connect(&self->sock);
+    if( !sock ) return;
 
     thrd_t thrd;
-    if( thrd_success != thrd_create(&thrd, self->peer_proc, peer) )
+    if( thrd_success != thrd_create(&thrd,
+                                    (int(*)(void*)) peer_thread_handler,
+                                    peer_data_create(self, sock)) )
     {
         fputs("ERROR: Cannot create thread!\n", stderr);
         abort();
@@ -30,7 +70,10 @@ void on_error(listener_t *self)
     epoll_encap_remove(self->epoll, socktcp_get_fd(&self->sock));
 }
 //------------------------------------------------------------------------------
-void listener_init(listener_t *self, epoll_encap_t *epoll, thrd_start_t peer_proc)
+void listener_init(listener_t             *self,
+                   epoll_encap_t          *epoll,
+                   listener_on_new_peer_t  peer_proc,
+                   void                   *peer_arg)
 {
     self->super.userarg  = self;
     self->super.on_read  = (void(*)(void*)) on_read;

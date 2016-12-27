@@ -7,7 +7,7 @@
 extern "C" {
 #endif
 
-int tcp_peer_proc(socktcp_t *sock);
+void tcp_peer_proc(void *dummy, socktcp_t *sock);
 
 void tcp_peer_wait_all_finished(void);
 

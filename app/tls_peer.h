@@ -7,7 +7,7 @@
 extern "C" {
 #endif
 
-int tls_peer_proc(socktcp_t *sock);
+void tls_peer_proc(void *dummy, socktcp_t *sock);
 
 void tls_peer_wait_all_finished(void);
 

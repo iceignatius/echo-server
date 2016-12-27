@@ -177,7 +177,7 @@ void notify_end_session(mbedtls_ssl_context *tls)
              close_rescode == MBEDTLS_ERR_SSL_WANT_WRITE );
 }
 //------------------------------------------------------------------------------
-int tls_peer_proc(socktcp_t *sock)
+void tls_peer_proc(void *dummy, socktcp_t *sock)
 {
     atomic_fetch_add(&refcnt, 1);
 
@@ -228,7 +228,6 @@ int tls_peer_proc(socktcp_t *sock)
     printf("TLS disconnected: %s\n", addrstr);
 
     atomic_fetch_sub(&refcnt, 1);
-    return 0;
 }
 //------------------------------------------------------------------------------
 void tls_peer_wait_all_finished(void)
