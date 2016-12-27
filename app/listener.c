@@ -39,11 +39,10 @@ int peer_thread_handler(peer_data_t *peer)
     atomic_fetch_add(&peer->listener->peer_inst_cnt, 1);
 
     peer->listener->peer_proc(peer->listener->peer_arg, peer->sock);
-
     socktcp_release(peer->sock);
-    peer_data_release(peer);
 
     atomic_fetch_sub(&peer->listener->peer_inst_cnt, 1);
+    peer_data_release(peer);
 
     return 0;
 }
