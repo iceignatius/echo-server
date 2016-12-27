@@ -1,0 +1,11 @@
+[TCP]
+Enabled = yes
+Port = 4220
+IdleTimeout = 3
+
+[TLS]
+Enabled = yes
+Port = 4221
+IdleTimeout = 3
+PrivateKeyFile = ../conf/privkey.pem
+CertificateFileFile = ../conf/cert.pem
