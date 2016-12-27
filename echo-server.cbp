@@ -33,6 +33,7 @@
 			<Add option="-pthread" />
 			<Add directory="submod/genutil" />
 			<Add directory="submod/c11thrd/include" />
+			<Add directory="submod/inih" />
 		</Compiler>
 		<Linker>
 			<Add option="-pthread" />
@@ -40,8 +41,10 @@
 			<Add library="mbedtls" />
 			<Add library="mbedx509" />
 			<Add library="mbedcrypto" />
+			<Add library="inih" />
 			<Add library="rt" />
 			<Add directory="submod/c11thrd/lib" />
+			<Add directory="submod/inih/extra" />
 		</Linker>
 		<Unit filename="app/cmdopt.c">
 			<Option compilerVar="CC" />
@@ -58,6 +61,10 @@
 		<Unit filename="app/main.c">
 			<Option compilerVar="CC" />
 		</Unit>
+		<Unit filename="app/servconf.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="app/servconf.h" />
 		<Unit filename="app/tcp_peer.c">
 			<Option compilerVar="CC" />
 		</Unit>

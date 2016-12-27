@@ -6,6 +6,7 @@
 #include "tcp_peer.h"
 #include "tls_peer.h"
 #include "cmdopt.h"
+#include "servconf.h"
 
 static bool go_terminate = false;
 
@@ -41,6 +42,9 @@ int print_help(void)
 //------------------------------------------------------------------------------
 int server_process(cmdopt_t *cmdopt)
 {
+    servconf_t conf;
+    servconf_init(&conf);
+
     epoll_encap_t epoll;
     epoll_encap_init(&epoll);
 
@@ -53,6 +57,12 @@ int server_process(cmdopt_t *cmdopt)
     int res;
     JMPBK_BEGIN
     {
+        if( !servconf_load_file(&conf, cmdopt->config_file) )
+        {
+            fprintf(stderr, "ERROR: Load configuration file (%s) failed!\n", cmdopt->config_file);
+            JMPBK_THROW(0);
+        }
+
         static const unsigned tcp_listen_port = 4220;
         if( !listener_start(&tcp_listener, tcp_listen_port) )
         {
@@ -93,6 +103,8 @@ int server_process(cmdopt_t *cmdopt)
 
     epoll_encap_wait_all_events(&epoll);
     epoll_encap_deinit(&epoll);
+
+    servconf_deinit(&conf);
 
     return res;
 }
