@@ -5,8 +5,6 @@
 #include <gen/timectr.h>
 #include "tcp_peer.h"
 
-static atomic_int refcnt = ATOMIC_VAR_INIT(0);
-
 //------------------------------------------------------------------------------
 static
 void addr_to_str(char *buf, size_t bufsize, sockaddr_t addr)
@@ -45,8 +43,6 @@ int send_from_cache(socktcp_t *sock, cirbuf_t *cache)
 //------------------------------------------------------------------------------
 void tcp_peer_proc(void *dummy, socktcp_t *sock)
 {
-    atomic_fetch_add(&refcnt, 1);
-
     char addrstr[32] = {0};
     addr_to_str(addrstr, sizeof(addrstr)-1, socktcp_get_remote_addr(sock));
     printf("TCP connected: %s\n", addrstr);
@@ -82,12 +78,5 @@ void tcp_peer_proc(void *dummy, socktcp_t *sock)
     cirbuf_deinit(&cache);
 
     printf("TCP disconnected: %s\n", addrstr);
-    atomic_fetch_sub(&refcnt, 1);
-}
-//------------------------------------------------------------------------------
-void tcp_peer_wait_all_finished(void)
-{
-    while( atomic_load(&refcnt) )
-        systime_sleep_awhile();
 }
 //------------------------------------------------------------------------------

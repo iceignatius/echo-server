@@ -9,8 +9,6 @@ extern "C" {
 
 void tcp_peer_proc(void *dummy, socktcp_t *sock);
 
-void tcp_peer_wait_all_finished(void);
-
 #ifdef __cplusplus
 }  // extern "C"
 #endif

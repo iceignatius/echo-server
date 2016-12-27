@@ -9,8 +9,6 @@
 #include "tls_resource.h"
 #include "tls_peer.h"
 
-static atomic_int refcnt = ATOMIC_VAR_INIT(0);
-
 //------------------------------------------------------------------------------
 static
 void addr_to_str(char *buf, size_t bufsize, sockaddr_t addr)
@@ -179,8 +177,6 @@ void notify_end_session(mbedtls_ssl_context *tls)
 //------------------------------------------------------------------------------
 void tls_peer_proc(void *dummy, socktcp_t *sock)
 {
-    atomic_fetch_add(&refcnt, 1);
-
     char addrstr[32] = {0};
     addr_to_str(addrstr, sizeof(addrstr)-1, socktcp_get_remote_addr(sock));
     printf("TLS connected: %s\n", addrstr);
@@ -225,12 +221,5 @@ void tls_peer_proc(void *dummy, socktcp_t *sock)
     cirbuf_deinit(&cache);
 
     printf("TLS disconnected: %s\n", addrstr);
-    atomic_fetch_sub(&refcnt, 1);
-}
-//------------------------------------------------------------------------------
-void tls_peer_wait_all_finished(void)
-{
-    while( atomic_load(&refcnt) )
-        systime_sleep_awhile();
 }
 //------------------------------------------------------------------------------

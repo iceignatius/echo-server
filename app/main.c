@@ -87,10 +87,10 @@ int server_process(cmdopt_t *cmdopt)
         }
 
         listener_stop(&tls_listener);
-        tls_peer_wait_all_finished();
+        listener_wait_all_peer_finished(&tls_listener);
 
         listener_stop(&tcp_listener);
-        tcp_peer_wait_all_finished();
+        listener_wait_all_peer_finished(&tcp_listener);
     }
     JMPBK_CATCH_ALL
     {

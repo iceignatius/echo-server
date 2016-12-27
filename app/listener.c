@@ -1,6 +1,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <threads.h>
+#include <gen/systime.h>
 #include "listener.h"
 
 typedef struct peer_data_t
@@ -35,10 +36,15 @@ void peer_data_release(peer_data_t *self)
 static
 int peer_thread_handler(peer_data_t *peer)
 {
+    atomic_fetch_add(&peer->listener->peer_inst_cnt, 1);
+
     peer->listener->peer_proc(peer->listener->peer_arg, peer->sock);
 
     socktcp_release(peer->sock);
     peer_data_release(peer);
+
+    atomic_fetch_sub(&peer->listener->peer_inst_cnt, 1);
+
     return 0;
 }
 //------------------------------------------------------------------------------
@@ -84,6 +90,8 @@ void listener_init(listener_t             *self,
     self->epoll     = epoll;
     self->peer_proc = peer_proc;
     socktcp_init(&self->sock);
+
+    self->peer_inst_cnt = ATOMIC_VAR_INIT(0);
 }
 //------------------------------------------------------------------------------
 void listener_deinit(listener_t *self)
@@ -121,5 +129,11 @@ void listener_stop(listener_t *self)
 {
     epoll_encap_remove(self->epoll, socktcp_get_fd(&self->sock));
     socktcp_close(&self->sock);
+}
+//------------------------------------------------------------------------------
+void listener_wait_all_peer_finished(listener_t *self)
+{
+    while( atomic_load(&self->peer_inst_cnt) )
+        systime_sleep_awhile();
 }
 //------------------------------------------------------------------------------

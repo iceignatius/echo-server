@@ -1,6 +1,7 @@
 #ifndef _LISTENER_H_
 #define _LISTENER_H_
 
+#include <stdatomic.h>
 #include <gen/net/socktcp.h>
 #include "epoll_encap.h"
 
@@ -19,6 +20,8 @@ typedef struct listener_t
     listener_on_new_peer_t  peer_proc;
     void                   *peer_arg;
 
+    atomic_int peer_inst_cnt;
+
 } listener_t;
 
 void listener_init(listener_t             *self,
@@ -29,6 +32,8 @@ void listener_deinit(listener_t *self);
 
 bool listener_start(listener_t *self, unsigned port);
 void listener_stop (listener_t *self);
+
+void listener_wait_all_peer_finished(listener_t *self);
 
 #ifdef __cplusplus
 }  // extern "C"
