@@ -78,12 +78,10 @@ int server_process(cmdopt_t *cmdopt)
         }
 
         timectr_t timer = timectr_init_inline(cmdopt->auto_exit_time);
-        while( !go_terminate &&
-              ( !cmdopt->auto_exit_enabled || !timectr_is_expired(&timer) ))
+        while( !go_terminate && !( cmdopt->auto_exit_enabled && timectr_is_expired(&timer) ) )
         {
             static const unsigned event_timeout = 500;
             epoll_encap_process_events(&epoll, event_timeout);
-            timectr_reset(&timer);
         }
 
         listener_stop(&tls_listener);
