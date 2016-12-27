@@ -7,6 +7,7 @@ all:
 clean:
 	cd submod && $(MAKE) $(MAKECMDGOALS)
 	cd app && $(MAKE) $(MAKECMDGOALS)
+	cd test && $(MAKE) $(MAKECMDGOALS)
 
 test:
 	cd test && $(MAKE) $(MAKECMDGOALS)

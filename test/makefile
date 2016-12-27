@@ -9,6 +9,7 @@ TLSPORT = 4221
 all:
 
 clean:
+	rm $(RECVFILE)
 
 test: all test_server_config start_server_background test_tcp test_tls
 
