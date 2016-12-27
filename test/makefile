@@ -4,15 +4,20 @@ TCPPORT = 4220
 TLSPORT = 4221
 
 .PHONY: all clean test
-.PHONY: start_server test_tcp test_tls
+.PHONY: test_server_config start_server_background test_tcp test_tls
 
 all:
 
 clean:
 
-test: all start_server test_tcp test_tls
+test: all test_server_config start_server_background test_tcp test_tls
 
-start_server:
+test_server_config:
+	cd ../ && bin/echo-server \
+		--auto-exit=1 \
+		--config-file=conf/config
+
+start_server_background:
 	cd ../ && bin/echo-server \
 		--auto-exit=10 \
 		--config-file=conf/config &
