@@ -67,9 +67,9 @@ int server_process(cmdopt_t *cmdopt)
             JMPBK_THROW(0);
         }
 
-        static const unsigned ap_timeout  = 10*1000;
-        timectr_t timer = timectr_init_inline(ap_timeout);
-        while( !timectr_is_expired(&timer) && !go_terminate )
+        timectr_t timer = timectr_init_inline(cmdopt->auto_exit_time);
+        while( !go_terminate &&
+              ( !cmdopt->auto_exit_enabled || !timectr_is_expired(&timer) ))
         {
             static const unsigned event_timeout = 500;
             epoll_encap_process_events(&epoll, event_timeout);
