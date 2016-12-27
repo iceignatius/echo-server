@@ -63,15 +63,13 @@ int server_process(cmdopt_t *cmdopt)
             JMPBK_THROW(0);
         }
 
-        static const unsigned tcp_listen_port = 4220;
-        if( !listener_start(&tcp_listener, tcp_listen_port) )
+        if( conf.tcp.enabled && !listener_start(&tcp_listener, conf.tcp.port) )
         {
             fprintf(stderr, "ERROR: TCP listener start failed!\n");
             JMPBK_THROW(0);
         }
 
-        static const unsigned tls_listen_port = 4221;
-        if( !listener_start(&tls_listener, tls_listen_port) )
+        if( conf.tls.enabled && !listener_start(&tls_listener, conf.tls.port) )
         {
             fprintf(stderr, "ERROR: TLS listener start failed!\n");
             JMPBK_THROW(0);
