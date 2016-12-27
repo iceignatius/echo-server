@@ -7,5 +7,5 @@ IdleTimeout = 3
 Enabled = yes
 Port = 4221
 IdleTimeout = 3
-PrivateKeyFile = ../conf/privkey.pem
-CertificateFileFile = ../conf/cert.pem
+PrivateKeyFile = conf/privkey.pem
+CertificateFileFile = conf/cert.pem

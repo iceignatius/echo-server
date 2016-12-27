@@ -15,7 +15,7 @@ test: all start_server test_tcp test_tls
 start_server:
 	cd ../ && bin/echo-server \
 		--auto-exit=10 \
-		--config-file=../conf/config &
+		--config-file=conf/config &
 
 test_tcp:
 	-rm $(RECVFILE)
