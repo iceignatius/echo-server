@@ -7,7 +7,7 @@
 #include <gen/cirbuf.h>
 #include <gen/timectr.h>
 #include "tls_resource.h"
-#include "tls_peer.h"
+#include "serv_tls.h"
 
 //------------------------------------------------------------------------------
 static
@@ -175,7 +175,7 @@ void notify_end_session(mbedtls_ssl_context *tls)
              close_rescode == MBEDTLS_ERR_SSL_WANT_WRITE );
 }
 //------------------------------------------------------------------------------
-void tls_peer_proc(void *dummy, socktcp_t *sock)
+void serv_tls_peer_proc(void *dummy, socktcp_t *sock)
 {
     char addrstr[32] = {0};
     addr_to_str(addrstr, sizeof(addrstr)-1, socktcp_get_remote_addr(sock));

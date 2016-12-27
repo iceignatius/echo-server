@@ -3,7 +3,7 @@
 #include <gen/jmpbk.h>
 #include <gen/cirbuf.h>
 #include <gen/timectr.h>
-#include "tcp_peer.h"
+#include "serv_tcp.h"
 
 //------------------------------------------------------------------------------
 static
@@ -41,7 +41,7 @@ int send_from_cache(socktcp_t *sock, cirbuf_t *cache)
     return ( sentsz == cirbuf_commit_read(cache, sentsz) )?( sentsz ):( -1 );
 }
 //------------------------------------------------------------------------------
-void tcp_peer_proc(void *dummy, socktcp_t *sock)
+void serv_tcp_peer_proc(void *dummy, socktcp_t *sock)
 {
     char addrstr[32] = {0};
     addr_to_str(addrstr, sizeof(addrstr)-1, socktcp_get_remote_addr(sock));

@@ -3,8 +3,8 @@
 #include <gen/jmpbk.h>
 #include <gen/timectr.h>
 #include "listener.h"
-#include "tcp_peer.h"
-#include "tls_peer.h"
+#include "serv_tcp.h"
+#include "serv_tls.h"
 #include "cmdopt.h"
 #include "servconf.h"
 
@@ -49,10 +49,10 @@ int server_process(cmdopt_t *cmdopt)
     epoll_encap_init(&epoll);
 
     listener_t tcp_listener;
-    listener_init(&tcp_listener, &epoll, tcp_peer_proc, NULL);
+    listener_init(&tcp_listener, &epoll, serv_tcp_peer_proc, NULL);
 
     listener_t tls_listener;
-    listener_init(&tls_listener, &epoll, tls_peer_proc, NULL);
+    listener_init(&tls_listener, &epoll, serv_tls_peer_proc, NULL);
 
     int res;
     JMPBK_BEGIN

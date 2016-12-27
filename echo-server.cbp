@@ -61,18 +61,18 @@
 		<Unit filename="app/main.c">
 			<Option compilerVar="CC" />
 		</Unit>
+		<Unit filename="app/serv_tcp.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="app/serv_tcp.h" />
+		<Unit filename="app/serv_tls.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="app/serv_tls.h" />
 		<Unit filename="app/servconf.c">
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="app/servconf.h" />
-		<Unit filename="app/tcp_peer.c">
-			<Option compilerVar="CC" />
-		</Unit>
-		<Unit filename="app/tcp_peer.h" />
-		<Unit filename="app/tls_peer.c">
-			<Option compilerVar="CC" />
-		</Unit>
-		<Unit filename="app/tls_peer.h" />
 		<Unit filename="app/tls_resource.c">
 			<Option compilerVar="CC" />
 		</Unit>
