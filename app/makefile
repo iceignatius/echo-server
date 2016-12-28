@@ -44,7 +44,6 @@ SRCS    += ../submod/genutil/gen/net/winwsa.c
 SRCS    += epoll_encap.c
 SRCS    += listener.c
 SRCS    += serv_tcp.c
-SRCS    += tls_resource.c
 SRCS    += serv_tls.c
 SRCS    += cmdopt.c
 SRCS    += servconf.c
