@@ -6,6 +6,23 @@
 #include "serv_tcp.h"
 
 //------------------------------------------------------------------------------
+void serv_tcp_init(serv_tcp_t *self)
+{
+}
+//------------------------------------------------------------------------------
+void serv_tcp_deinit(serv_tcp_t *self)
+{
+}
+//------------------------------------------------------------------------------
+bool serv_tcp_start(serv_tcp_t *self)
+{
+    return true;
+}
+//------------------------------------------------------------------------------
+void serv_tcp_stop(serv_tcp_t *self)
+{
+}
+//------------------------------------------------------------------------------
 static
 void addr_to_str(char *buf, size_t bufsize, sockaddr_t addr)
 {
@@ -41,7 +58,7 @@ int send_from_cache(socktcp_t *sock, cirbuf_t *cache)
     return ( sentsz == cirbuf_commit_read(cache, sentsz) )?( sentsz ):( -1 );
 }
 //------------------------------------------------------------------------------
-void serv_tcp_peer_proc(void *dummy, socktcp_t *sock)
+void serv_tcp_peer_proc(serv_tcp_t *self, socktcp_t *sock)
 {
     char addrstr[32] = {0};
     addr_to_str(addrstr, sizeof(addrstr)-1, socktcp_get_remote_addr(sock));

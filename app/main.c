@@ -2,11 +2,10 @@
 #include <signal.h>
 #include <gen/jmpbk.h>
 #include <gen/timectr.h>
-#include "listener.h"
-#include "serv_tcp.h"
-#include "serv_tls.h"
 #include "cmdopt.h"
 #include "servconf.h"
+#include "serv_tcp.h"
+#include "serv_tls.h"
 
 static bool go_terminate = false;
 
@@ -48,11 +47,17 @@ int server_process(cmdopt_t *cmdopt)
     epoll_encap_t epoll;
     epoll_encap_init(&epoll);
 
+    serv_tcp_t serv_tcp;
+    serv_tcp_init(&serv_tcp);
+
+    serv_tls_t serv_tls;
+    serv_tls_init(&serv_tls);
+
     listener_t tcp_listener;
-    listener_init(&tcp_listener, &epoll, serv_tcp_peer_proc, NULL);
+    listener_init(&tcp_listener, &epoll, (void(*)(void*,socktcp_t*)) serv_tcp_peer_proc, NULL);
 
     listener_t tls_listener;
-    listener_init(&tls_listener, &epoll, serv_tls_peer_proc, NULL);
+    listener_init(&tls_listener, &epoll, (void(*)(void*,socktcp_t*)) serv_tls_peer_proc, NULL);
 
     int res;
     JMPBK_BEGIN
@@ -60,6 +65,18 @@ int server_process(cmdopt_t *cmdopt)
         if( !servconf_load_file(&conf, cmdopt->config_file) )
         {
             fprintf(stderr, "ERROR: Load configuration file (%s) failed!\n", cmdopt->config_file);
+            JMPBK_THROW(0);
+        }
+
+        if( conf.tcp.enabled && !serv_tcp_start(&serv_tcp) )
+        {
+            fprintf(stderr, "ERROR: TCP server start failed!\n");
+            JMPBK_THROW(0);
+        }
+
+        if( conf.tls.enabled && !serv_tls_start(&serv_tls) )
+        {
+            fprintf(stderr, "ERROR: TLS server start failed!\n");
             JMPBK_THROW(0);
         }
 
@@ -87,6 +104,9 @@ int server_process(cmdopt_t *cmdopt)
 
         listener_stop(&tcp_listener);
         listener_wait_all_peer_finished(&tcp_listener);
+
+        serv_tls_stop(&serv_tls);
+        serv_tcp_stop(&serv_tcp);
     }
     JMPBK_FINAL
     {
@@ -96,6 +116,8 @@ int server_process(cmdopt_t *cmdopt)
 
     listener_deinit(&tls_listener);
     listener_deinit(&tcp_listener);
+    serv_tls_deinit(&serv_tls);
+    serv_tcp_deinit(&serv_tcp);
 
     epoll_encap_wait_all_events(&epoll);
     epoll_encap_deinit(&epoll);

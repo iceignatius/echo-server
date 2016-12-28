@@ -10,6 +10,23 @@
 #include "serv_tls.h"
 
 //------------------------------------------------------------------------------
+void serv_tls_init(serv_tls_t *self)
+{
+}
+//------------------------------------------------------------------------------
+void serv_tls_deinit(serv_tls_t *self)
+{
+}
+//------------------------------------------------------------------------------
+bool serv_tls_start(serv_tls_t *self)
+{
+    return true;
+}
+//------------------------------------------------------------------------------
+void serv_tls_stop(serv_tls_t *self)
+{
+}
+//------------------------------------------------------------------------------
 static
 void addr_to_str(char *buf, size_t bufsize, sockaddr_t addr)
 {
@@ -175,7 +192,7 @@ void notify_end_session(mbedtls_ssl_context *tls)
              close_rescode == MBEDTLS_ERR_SSL_WANT_WRITE );
 }
 //------------------------------------------------------------------------------
-void serv_tls_peer_proc(void *dummy, socktcp_t *sock)
+void serv_tls_peer_proc(serv_tls_t *self, socktcp_t *sock)
 {
     char addrstr[32] = {0};
     addr_to_str(addrstr, sizeof(addrstr)-1, socktcp_get_remote_addr(sock));
