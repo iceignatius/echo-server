@@ -9,7 +9,7 @@ void cmdopt_load_defaults(cmdopt_t *self)
     self->need_help         = false;
     self->auto_exit_enabled = false;
     self->auto_exit_time    = 60*1000;
-    self->config_file       = "/etc/echo-server/conf";
+    self->config_file       = "/usr/local/etc/echo-server/config";
 }
 //------------------------------------------------------------------------------
 void cmdopt_load_args(cmdopt_t *self, int argc, char *argv[])
