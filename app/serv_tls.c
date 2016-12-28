@@ -1,12 +1,9 @@
-#include <stdatomic.h>
 #include <stdio.h>
-#include <string.h>
 #include <mbedtls/error.h>
 #include <mbedtls/ssl.h>
 #include <gen/jmpbk.h>
 #include <gen/cirbuf.h>
 #include <gen/timectr.h>
-#include "tls_resource.h"
 #include "serv_tls.h"
 
 //------------------------------------------------------------------------------
@@ -16,16 +13,95 @@ void serv_tls_init(serv_tls_t *self, epoll_encap_t *epoll)
                   epoll,
                   (void(*)(void*,socktcp_t*)) serv_tls_peer_proc,
                   self);
+
+    mbedtls_entropy_init   (&self->entropy);
+    mbedtls_ctr_drbg_init  (&self->rndg);
+    mbedtls_pk_init        (&self->key);
+    mbedtls_x509_crt_init  (&self->cert);
+    mbedtls_ssl_cache_init (&self->cache);
+    mbedtls_ssl_config_init(&self->conf);
 }
 //------------------------------------------------------------------------------
 void serv_tls_deinit(serv_tls_t *self)
 {
+    mbedtls_ssl_config_free(&self->conf);
+    mbedtls_ssl_cache_free (&self->cache);
+    mbedtls_x509_crt_free  (&self->cert);
+    mbedtls_pk_free        (&self->key);
+    mbedtls_ctr_drbg_free  (&self->rndg);
+    mbedtls_entropy_free   (&self->entropy);
+
     listener_deinit(&self->listener);
+}
+//------------------------------------------------------------------------------
+static
+void on_debug_message(void *userarg, int level, const char *file, int line, const char *msg)
+{
+    // Ignore debug message.
+}
+//------------------------------------------------------------------------------
+static
+bool setup_tls_resources(serv_tls_t *self, const char *keyfile, const char *certfile)
+{
+    bool res = false;
+    do
+    {
+        static const char pdata[] = "tls-server";
+        if( mbedtls_ctr_drbg_seed(&self->rndg,
+                                  mbedtls_entropy_func,
+                                  &self->entropy,
+                                  (const unsigned char*) pdata,
+                                  sizeof(pdata)) )
+        {
+            fputs("ERROR: Initialise random number generator failed!\n", stderr);
+            break;
+        }
+
+        if( mbedtls_pk_parse_keyfile(&self->key, keyfile, NULL) )
+        {
+            fputs("ERROR: Load key file failed!\n", stderr);
+            break;
+        }
+
+        if( mbedtls_x509_crt_parse_file(&self->cert, certfile) )
+        {
+            fputs("ERROR: Load certification file failed!\n", stderr);
+            break;
+        }
+
+        if( mbedtls_ssl_config_defaults(&self->conf,
+                                        MBEDTLS_SSL_IS_SERVER,
+                                        MBEDTLS_SSL_TRANSPORT_STREAM,
+                                        MBEDTLS_SSL_PRESET_DEFAULT) )
+        {
+            fputs("ERROR: Initialise TLS configuration failed!\n", stderr);
+            break;
+        }
+
+        if( mbedtls_ssl_conf_own_cert(&self->conf, &self->cert, &self->key) )
+        {
+            fputs("ERROR: Set up keys failed!\n", stderr);
+            break;
+        }
+
+        mbedtls_ssl_conf_rng(&self->conf, mbedtls_ctr_drbg_random, &self->rndg);
+        mbedtls_ssl_conf_dbg(&self->conf, on_debug_message, stderr);
+        mbedtls_ssl_conf_session_cache(&self->conf,
+                                       &self->cache,
+                                       mbedtls_ssl_cache_get,
+                                       mbedtls_ssl_cache_set );
+
+        res = true;
+    } while(false);
+
+    return res;
 }
 //------------------------------------------------------------------------------
 bool serv_tls_start(serv_tls_t *self, unsigned port)
 {
-    return listener_start(&self->listener, port);
+    if( !setup_tls_resources(self, "conf/privkey.pem", "conf/cert.pem") ) return false;
+    if( !listener_start(&self->listener, port) ) return false;
+    return true;
 }
 //------------------------------------------------------------------------------
 void serv_tls_stop_listen(serv_tls_t *self)
@@ -47,40 +123,6 @@ void addr_to_str(char *buf, size_t bufsize, sockaddr_t addr)
     unsigned port = sockaddr_get_port(&addr);
 
     snprintf(buf, bufsize, "%s:%u", ipstr, port);
-}
-//------------------------------------------------------------------------------
-static
-tls_resource_t* get_unique_resource(void)
-{
-    static tls_resource_t res;
-
-    pthread_mutex_t lock = PTHREAD_MUTEX_INITIALIZER;
-    if( pthread_mutex_lock(&lock) )
-    {
-        fputs("ERROR: Mutex failure!\n", stderr);
-        abort();
-    }
-
-    static bool inited = false;
-    if( !inited )
-    {
-        inited = true;
-
-        tls_resource_init(&res);
-        if( !tls_resource_setup(&res, "conf/privkey.pem", "conf/cert.pem") )
-        {
-            fputs("ERROR: Set up TLS resource failed!\n", stderr);
-            abort();
-        }
-    }
-
-    if( pthread_mutex_unlock(&lock) )
-    {
-        fputs("ERROR: Mutex failure!\n", stderr);
-        abort();
-    }
-
-    return &res;
 }
 //------------------------------------------------------------------------------
 static
@@ -134,9 +176,9 @@ int send_from_cache(mbedtls_ssl_context *tls, cirbuf_t *cache)
 }
 //------------------------------------------------------------------------------
 static
-bool setup_session(mbedtls_ssl_context *tls, socktcp_t *sock, tls_resource_t *resource)
+bool setup_session(serv_tls_t *self, mbedtls_ssl_context *tls, socktcp_t *sock)
 {
-    if( mbedtls_ssl_setup(tls, &resource->conf) ) return false;
+    if( mbedtls_ssl_setup(tls, &self->conf) ) return false;
 
     mbedtls_ssl_set_bio(tls,
                         sock,
@@ -224,7 +266,7 @@ void serv_tls_peer_proc(serv_tls_t *self, socktcp_t *sock)
             JMPBK_THROW(0);
         }
 
-        if( !setup_session(&tls, sock, get_unique_resource()) )
+        if( !setup_session(self, &tls, sock) )
         {
             fputs("ERROR: Set up TLS session failed!\n", stderr);
             JMPBK_THROW(0);

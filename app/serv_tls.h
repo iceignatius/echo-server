@@ -1,6 +1,9 @@
 #ifndef _SERV_TLS_H_
 #define _SERV_TLS_H_
 
+#include <mbedtls/entropy.h>
+#include <mbedtls/ctr_drbg.h>
+#include <mbedtls/ssl_cache.h>
 #include "listener.h"
 
 #ifdef __cplusplus
@@ -10,6 +13,14 @@ extern "C" {
 typedef struct serv_tls_t
 {
     listener_t listener;
+
+    mbedtls_entropy_context   entropy;
+    mbedtls_ctr_drbg_context  rndg;
+    mbedtls_pk_context        key;
+    mbedtls_x509_crt          cert;
+    mbedtls_ssl_cache_context cache;
+    mbedtls_ssl_config        conf;
+
 } serv_tls_t;
 
 void serv_tls_init  (serv_tls_t *self, epoll_encap_t *epoll);
