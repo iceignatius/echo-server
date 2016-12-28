@@ -9,12 +9,13 @@ extern "C" {
 
 typedef struct serv_tls_t
 {
+    listener_t listener;
 } serv_tls_t;
 
-void serv_tls_init  (serv_tls_t *self);
+void serv_tls_init  (serv_tls_t *self, epoll_encap_t *epoll);
 void serv_tls_deinit(serv_tls_t *self);
 
-bool serv_tls_start           (serv_tls_t *self);
+bool serv_tls_start           (serv_tls_t *self, unsigned port);
 void serv_tls_stop_listen     (serv_tls_t *self);
 void serv_tls_wait_all_stopped(serv_tls_t *self);
 

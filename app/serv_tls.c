@@ -10,25 +10,32 @@
 #include "serv_tls.h"
 
 //------------------------------------------------------------------------------
-void serv_tls_init(serv_tls_t *self)
+void serv_tls_init(serv_tls_t *self, epoll_encap_t *epoll)
 {
+    listener_init(&self->listener,
+                  epoll,
+                  (void(*)(void*,socktcp_t*)) serv_tls_peer_proc,
+                  self);
 }
 //------------------------------------------------------------------------------
 void serv_tls_deinit(serv_tls_t *self)
 {
+    listener_deinit(&self->listener);
 }
 //------------------------------------------------------------------------------
-bool serv_tls_start(serv_tls_t *self)
+bool serv_tls_start(serv_tls_t *self, unsigned port)
 {
-    return true;
+    return listener_start(&self->listener, port);
 }
 //------------------------------------------------------------------------------
 void serv_tls_stop_listen(serv_tls_t *self)
 {
+    listener_stop(&self->listener);
 }
 //------------------------------------------------------------------------------
 void serv_tls_wait_all_stopped(serv_tls_t *self)
 {
+    listener_wait_all_peer_finished(&self->listener);
 }
 //------------------------------------------------------------------------------
 static

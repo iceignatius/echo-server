@@ -48,16 +48,10 @@ int server_process(cmdopt_t *cmdopt)
     epoll_encap_init(&epoll);
 
     serv_tcp_t serv_tcp;
-    serv_tcp_init(&serv_tcp);
+    serv_tcp_init(&serv_tcp, &epoll);
 
     serv_tls_t serv_tls;
-    serv_tls_init(&serv_tls);
-
-    listener_t tcp_listener;
-    listener_init(&tcp_listener, &epoll, (void(*)(void*,socktcp_t*)) serv_tcp_peer_proc, NULL);
-
-    listener_t tls_listener;
-    listener_init(&tls_listener, &epoll, (void(*)(void*,socktcp_t*)) serv_tls_peer_proc, NULL);
+    serv_tls_init(&serv_tls, &epoll);
 
     int res;
     JMPBK_BEGIN
@@ -68,27 +62,15 @@ int server_process(cmdopt_t *cmdopt)
             JMPBK_THROW(0);
         }
 
-        if( conf.tcp.enabled && !serv_tcp_start(&serv_tcp) )
+        if( conf.tcp.enabled && !serv_tcp_start(&serv_tcp, conf.tcp.port) )
         {
             fprintf(stderr, "ERROR: TCP server start failed!\n");
             JMPBK_THROW(0);
         }
 
-        if( conf.tls.enabled && !serv_tls_start(&serv_tls) )
+        if( conf.tls.enabled && !serv_tls_start(&serv_tls, conf.tls.port) )
         {
             fprintf(stderr, "ERROR: TLS server start failed!\n");
-            JMPBK_THROW(0);
-        }
-
-        if( conf.tcp.enabled && !listener_start(&tcp_listener, conf.tcp.port) )
-        {
-            fprintf(stderr, "ERROR: TCP listener start failed!\n");
-            JMPBK_THROW(0);
-        }
-
-        if( conf.tls.enabled && !listener_start(&tls_listener, conf.tls.port) )
-        {
-            fprintf(stderr, "ERROR: TLS listener start failed!\n");
             JMPBK_THROW(0);
         }
 
@@ -98,12 +80,6 @@ int server_process(cmdopt_t *cmdopt)
             static const unsigned event_timeout = 500;
             epoll_encap_process_events(&epoll, event_timeout);
         }
-
-        listener_stop(&tls_listener);
-        listener_wait_all_peer_finished(&tls_listener);
-
-        listener_stop(&tcp_listener);
-        listener_wait_all_peer_finished(&tcp_listener);
 
         serv_tcp_stop_listen(&serv_tcp);
         serv_tls_stop_listen(&serv_tls);
@@ -117,8 +93,6 @@ int server_process(cmdopt_t *cmdopt)
     }
     JMPBK_END
 
-    listener_deinit(&tls_listener);
-    listener_deinit(&tcp_listener);
     serv_tls_deinit(&serv_tls);
     serv_tcp_deinit(&serv_tcp);
 

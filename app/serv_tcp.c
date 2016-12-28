@@ -6,25 +6,32 @@
 #include "serv_tcp.h"
 
 //------------------------------------------------------------------------------
-void serv_tcp_init(serv_tcp_t *self)
+void serv_tcp_init(serv_tcp_t *self, epoll_encap_t *epoll)
 {
+    listener_init(&self->listener,
+                  epoll,
+                  (void(*)(void*,socktcp_t*)) serv_tcp_peer_proc,
+                  self);
 }
 //------------------------------------------------------------------------------
 void serv_tcp_deinit(serv_tcp_t *self)
 {
+    listener_deinit(&self->listener);
 }
 //------------------------------------------------------------------------------
-bool serv_tcp_start(serv_tcp_t *self)
+bool serv_tcp_start(serv_tcp_t *self, unsigned port)
 {
-    return true;
+    return listener_start(&self->listener, port);
 }
 //------------------------------------------------------------------------------
 void serv_tcp_stop_listen(serv_tcp_t *self)
 {
+    listener_stop(&self->listener);
 }
 //------------------------------------------------------------------------------
 void serv_tcp_wait_all_stopped(serv_tcp_t *self)
 {
+    listener_wait_all_peer_finished(&self->listener);
 }
 //------------------------------------------------------------------------------
 static
