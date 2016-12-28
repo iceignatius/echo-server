@@ -88,6 +88,7 @@ void listener_init(listener_t             *self,
 
     self->epoll     = epoll;
     self->peer_proc = peer_proc;
+    self->peer_arg  = peer_arg;
     socktcp_init(&self->sock);
 
     self->peer_inst_cnt = ATOMIC_VAR_INIT(0);
