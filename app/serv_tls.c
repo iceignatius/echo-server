@@ -97,9 +97,12 @@ bool setup_tls_resources(serv_tls_t *self, const char *keyfile, const char *cert
     return res;
 }
 //------------------------------------------------------------------------------
-bool serv_tls_start(serv_tls_t *self, unsigned port)
+bool serv_tls_start(serv_tls_t *self,
+                    unsigned    port,
+                    const char *keyfile,
+                    const char *certfile)
 {
-    if( !setup_tls_resources(self, "conf/privkey.pem", "conf/cert.pem") ) return false;
+    if( !setup_tls_resources(self, keyfile, certfile) ) return false;
     if( !listener_start(&self->listener, port) ) return false;
     return true;
 }

@@ -68,7 +68,10 @@ int server_process(cmdopt_t *cmdopt)
             JMPBK_THROW(0);
         }
 
-        if( conf.tls.enabled && !serv_tls_start(&serv_tls, conf.tls.port) )
+        if( conf.tls.enabled && !serv_tls_start(&serv_tls,
+                                                conf.tls.port,
+                                                conf.tls.priv_key_file,
+                                                conf.tls.cert_file) )
         {
             fprintf(stderr, "ERROR: TLS server start failed!\n");
             JMPBK_THROW(0);
