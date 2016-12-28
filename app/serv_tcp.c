@@ -19,7 +19,11 @@ bool serv_tcp_start(serv_tcp_t *self)
     return true;
 }
 //------------------------------------------------------------------------------
-void serv_tcp_stop(serv_tcp_t *self)
+void serv_tcp_stop_listen(serv_tcp_t *self)
+{
+}
+//------------------------------------------------------------------------------
+void serv_tcp_wait_all_stopped(serv_tcp_t *self)
 {
 }
 //------------------------------------------------------------------------------

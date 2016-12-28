@@ -105,8 +105,11 @@ int server_process(cmdopt_t *cmdopt)
         listener_stop(&tcp_listener);
         listener_wait_all_peer_finished(&tcp_listener);
 
-        serv_tls_stop(&serv_tls);
-        serv_tcp_stop(&serv_tcp);
+        serv_tcp_stop_listen(&serv_tcp);
+        serv_tls_stop_listen(&serv_tls);
+
+        serv_tcp_wait_all_stopped(&serv_tcp);
+        serv_tls_wait_all_stopped(&serv_tls);
     }
     JMPBK_FINAL
     {

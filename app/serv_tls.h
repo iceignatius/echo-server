@@ -14,8 +14,9 @@ typedef struct serv_tls_t
 void serv_tls_init  (serv_tls_t *self);
 void serv_tls_deinit(serv_tls_t *self);
 
-bool serv_tls_start(serv_tls_t *self);
-void serv_tls_stop (serv_tls_t *self);
+bool serv_tls_start           (serv_tls_t *self);
+void serv_tls_stop_listen     (serv_tls_t *self);
+void serv_tls_wait_all_stopped(serv_tls_t *self);
 
 void serv_tls_peer_proc(serv_tls_t *self, socktcp_t *sock);
 

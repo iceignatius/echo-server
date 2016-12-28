@@ -23,7 +23,11 @@ bool serv_tls_start(serv_tls_t *self)
     return true;
 }
 //------------------------------------------------------------------------------
-void serv_tls_stop(serv_tls_t *self)
+void serv_tls_stop_listen(serv_tls_t *self)
+{
+}
+//------------------------------------------------------------------------------
+void serv_tls_wait_all_stopped(serv_tls_t *self)
 {
 }
 //------------------------------------------------------------------------------

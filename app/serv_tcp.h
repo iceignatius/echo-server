@@ -14,8 +14,9 @@ typedef struct serv_tcp_t
 void serv_tcp_init  (serv_tcp_t *self);
 void serv_tcp_deinit(serv_tcp_t *self);
 
-bool serv_tcp_start(serv_tcp_t *self);
-void serv_tcp_stop (serv_tcp_t *self);
+bool serv_tcp_start           (serv_tcp_t *self);
+void serv_tcp_stop_listen     (serv_tcp_t *self);
+void serv_tcp_wait_all_stopped(serv_tcp_t *self);
 
 void serv_tcp_peer_proc(serv_tcp_t *self, socktcp_t *sock);
 
