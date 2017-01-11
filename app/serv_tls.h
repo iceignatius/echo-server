@@ -21,6 +21,8 @@ typedef struct serv_tls_t
     mbedtls_ssl_cache_context cache;
     mbedtls_ssl_config        conf;
 
+    unsigned idle_timeout;
+
 } serv_tls_t;
 
 void serv_tls_init  (serv_tls_t *self, epoll_encap_t *epoll);
@@ -29,7 +31,8 @@ void serv_tls_deinit(serv_tls_t *self);
 bool serv_tls_start(serv_tls_t *self,
                     unsigned    port,
                     const char *keyfile,
-                    const char *certfile);
+                    const char *certfile,
+                    unsigned    idle_timeout);
 void serv_tls_stop_listen     (serv_tls_t *self);
 void serv_tls_wait_all_stopped(serv_tls_t *self);
 

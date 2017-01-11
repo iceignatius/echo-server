@@ -10,12 +10,14 @@ extern "C" {
 typedef struct serv_tcp_t
 {
     listener_t listener;
+
+    unsigned idle_timeout;
 } serv_tcp_t;
 
 void serv_tcp_init  (serv_tcp_t *self, epoll_encap_t *epoll);
 void serv_tcp_deinit(serv_tcp_t *self);
 
-bool serv_tcp_start           (serv_tcp_t *self, unsigned port);
+bool serv_tcp_start           (serv_tcp_t *self, unsigned port, unsigned idle_timeout);
 void serv_tcp_stop_listen     (serv_tcp_t *self);
 void serv_tcp_wait_all_stopped(serv_tcp_t *self);
 

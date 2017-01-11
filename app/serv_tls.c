@@ -20,6 +20,8 @@ void serv_tls_init(serv_tls_t *self, epoll_encap_t *epoll)
     mbedtls_x509_crt_init  (&self->cert);
     mbedtls_ssl_cache_init (&self->cache);
     mbedtls_ssl_config_init(&self->conf);
+
+    self->idle_timeout = 0;
 }
 //------------------------------------------------------------------------------
 void serv_tls_deinit(serv_tls_t *self)
@@ -100,10 +102,14 @@ bool setup_tls_resources(serv_tls_t *self, const char *keyfile, const char *cert
 bool serv_tls_start(serv_tls_t *self,
                     unsigned    port,
                     const char *keyfile,
-                    const char *certfile)
+                    const char *certfile,
+                    unsigned    idle_timeout)
 {
+    self->idle_timeout = idle_timeout;
+
     if( !setup_tls_resources(self, keyfile, certfile) ) return false;
     if( !listener_start(&self->listener, port) ) return false;
+
     return true;
 }
 //------------------------------------------------------------------------------
@@ -283,8 +289,7 @@ void serv_tls_peer_proc(serv_tls_t *self, socktcp_t *sock)
 
         print_tls_info(&tls);
 
-        static const unsigned idle_timeout = 3*1000;
-        data_exchange_proc(&tls, &cache, idle_timeout);
+        data_exchange_proc(&tls, &cache, self->idle_timeout);
 
         notify_end_session(&tls);
     }

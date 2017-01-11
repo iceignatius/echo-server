@@ -12,6 +12,8 @@ void serv_tcp_init(serv_tcp_t *self, epoll_encap_t *epoll)
                   epoll,
                   (void(*)(void*,socktcp_t*)) serv_tcp_peer_proc,
                   self);
+
+    self->idle_timeout = 0;
 }
 //------------------------------------------------------------------------------
 void serv_tcp_deinit(serv_tcp_t *self)
@@ -19,8 +21,9 @@ void serv_tcp_deinit(serv_tcp_t *self)
     listener_deinit(&self->listener);
 }
 //------------------------------------------------------------------------------
-bool serv_tcp_start(serv_tcp_t *self, unsigned port)
+bool serv_tcp_start(serv_tcp_t *self, unsigned port, unsigned idle_timeout)
 {
+    self->idle_timeout = idle_timeout;
     return listener_start(&self->listener, port);
 }
 //------------------------------------------------------------------------------
@@ -69,6 +72,23 @@ int send_from_cache(socktcp_t *sock, cirbuf_t *cache)
     return ( sentsz == cirbuf_commit_read(cache, sentsz) )?( sentsz ):( -1 );
 }
 //------------------------------------------------------------------------------
+static
+void data_exchange_proc(socktcp_t *sock, cirbuf_t *cache, unsigned idle_timeout)
+{
+    timectr_t timer = timectr_init_inline(idle_timeout);
+    while( !timectr_is_expired(&timer) )
+    {
+        int recvsz = recv_to_cache(sock, cache);
+        int sentsz = send_from_cache(sock, cache);
+        if( recvsz < 0 || sentsz < 0 ) break;
+
+        if( recvsz || sentsz )
+            timectr_reset(&timer);
+        else
+            systime_sleep_awhile();
+    }
+}
+//------------------------------------------------------------------------------
 void serv_tcp_peer_proc(serv_tcp_t *self, socktcp_t *sock)
 {
     char addrstr[32] = {0};
@@ -87,19 +107,7 @@ void serv_tcp_peer_proc(serv_tcp_t *self, socktcp_t *sock)
             JMPBK_THROW(0);
         }
 
-        static const unsigned idle_timeout = 3*1000;
-        timectr_t timer = timectr_init_inline(idle_timeout);
-        while( !timectr_is_expired(&timer) )
-        {
-            int recvsz = recv_to_cache(sock, &cache);
-            int sentsz = send_from_cache(sock, &cache);
-            if( recvsz < 0 || sentsz < 0 ) break;
-
-            if( recvsz || sentsz )
-                timectr_reset(&timer);
-            else
-                systime_sleep_awhile();
-        }
+        data_exchange_proc(sock, &cache, self->idle_timeout);
     }
     JMPBK_END
 

@@ -53,14 +53,14 @@ int ini_item_handler(servconf_t *self, const char* section, const char* name, co
     if( 0 == strcmp(section, "TLS") && 0 == strcmp(name, "Port") )
         self->tls.port = strtoul(value, NULL, 10);
 
-    if( 0 == strcmp(section, "TLS") && 0 == strcmp(name, "IdleTimeout") )
-        self->tls.idle_timeout = 1000 * strtoul(value, NULL, 10);
-
     if( 0 == strcmp(section, "TLS") && 0 == strcmp(name, "PrivateKeyFile") )
         strncpy(self->tls.priv_key_file, value, sizeof(self->tls.priv_key_file)-1);
 
     if( 0 == strcmp(section, "TLS") && 0 == strcmp(name, "CertificateFileFile") )
         strncpy(self->tls.cert_file, value, sizeof(self->tls.cert_file)-1);
+
+    if( 0 == strcmp(section, "TLS") && 0 == strcmp(name, "IdleTimeout") )
+        self->tls.idle_timeout = 1000 * strtoul(value, NULL, 10);
 
     return true;
 }
